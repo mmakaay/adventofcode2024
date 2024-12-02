@@ -4,6 +4,7 @@ import sys
 
 SAFE_STEP_SIZES = [1, 2, 3]
 
+
 def assess_for_safety(report):
     values = map(int, report.split())
     direction, previous = 0, next(values)
@@ -22,6 +23,6 @@ def evaluate_reports():
         is_safe = assess_for_safety(report)
         yield is_safe
 
+
 safe_count = sum(is_safe for is_safe in evaluate_reports())
 print(f"Number of safe reports: {safe_count}")
-

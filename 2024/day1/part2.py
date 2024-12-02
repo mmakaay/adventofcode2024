@@ -10,8 +10,7 @@ for line in sys.stdin:
     rights.update([right])
 
 similarity_scores = (
-    left_count * left * rights.get(left, 0)
-    for left, left_count in lefts.items()
+    left_count * left * rights.get(left, 0) for left, left_count in lefts.items()
 )
 summed_similary_scores = sum(similarity_scores)
 
