@@ -8,9 +8,7 @@ def load_grid():
 
 
 def count_x_masses_in_grid(grid):
-    return sum(
-        grid_has_xmas_at(grid, x, y) for x, y in all_possible_mid_points(grid)
-    )
+    return sum(grid_has_xmas_at(grid, x, y) for x, y in all_possible_mid_points(grid))
 
 
 def all_possible_mid_points(grid):
