@@ -194,7 +194,6 @@ Nice!
 ## Algorithm
 
 Compute the number of button A presses. Base on the above, this is:
-
 ```
 Da = Dya * Dxb / Dyb - Dxa
 Pa = (Yp * Dxb / Dyb - Xp) / Da
@@ -212,19 +211,22 @@ Pa = (Yp * Dxb - Xp * Dyb) / Da
 ```
 
 Using the Pa found, Pb can be computed with:
-
+```
 Pb = (Xp - Pa * Dxa) // Dxb
+```
 
 We now have Pa and Pb, but we might not be right on the prize. To know if we
 won, we'll have to see if the resulting position matches the prize. For
 this, the claw's position (Gx, Gy) must be computed:
-
+```
 Xc = Pa * Dxa + Pb * Dxb
 Yc = Pa * Dya + Pb * Dyb
+```
 
 After which a comparison can be made to check for success:
-
+```
 (Xc, Yc) == (Px, Py)
+```
 
 If we're right on the prize, then we have to additionally check:
 
