@@ -2,7 +2,6 @@
 
 import sys
 from heapq import heappush, heappop
-from collections import defaultdict
 
 DIRECTIONS = [(0, -1), (1, 0), (0, 1), (-1, 0)]
 EAST = 1
@@ -32,28 +31,23 @@ def find_best_route_through_maze(maze, start, end):
     # processing them from lowest to highest cost so far.
     queue = []
 
-    # Cost mapping storage, that is used to keep track of the lowest
-    # cost routes that were found to reach certain positions on the
-    # maze when moving in a certain direction. This is used to decide
-    # whether or not it is feasible to continue tracing a route: it is
-    # not when the cost of the trace at hand exceeds an already known
-    # cheaper route.
-    costs = defaultdict(lambda: defaultdict(lambda: [None]*4))
+    # Cost mapping storage, used to keep track of the lowest possible
+    # cost that was found to reach the states in the maze.
+    costs = {}
 
     def is_wall(x, y):
         return maze[y][x] == "#"
 
-    def enqueue_when_feasible(x, y, direction, cost):
-        existing_cost = costs[y][x][direction]
-        if existing_cost is None or cost < existing_cost:
-            costs[y][x][direction] = cost
-            heappush(queue, (cost, x, y, direction))
+    def enqueue_when_cheaper(cost, state):
+        if state not in costs or cost < costs[state]:
+            costs[state] = cost
+            heappush(queue, (cost, state))
 
     # Initialize state, using start direction = east.
-    enqueue_when_feasible(*start, EAST, 0)
+    enqueue_when_cheaper(0, (*start, EAST))
 
     while queue:
-        cost, x, y, direction = heappop(queue)
+        cost, (x, y, direction) = heappop(queue)
 
         # When the end is reached, we are done.
         if (x, y) == end:
@@ -61,16 +55,16 @@ def find_best_route_through_maze(maze, start, end):
 
         # Try to move one position forward.
         dx, dy = DIRECTIONS[direction]
-        x2, y2 = x + dx, y + dy
-        if not is_wall(x2, y2):
+        new_x, new_y = x + dx, y + dy
+        if not is_wall(new_x, new_y):
             new_cost = cost + STEP_COST
-            enqueue_when_feasible(x2, y2, direction, new_cost)
+            enqueue_when_cheaper(new_cost, (new_x, new_y, direction))
 
         # Try to rotate into the other directions.
         for rotation in (-1, +1):
             new_direction = (direction + rotation) % 4
             new_cost = cost + ROTATE_COST
-            enqueue_when_feasible(x, y, new_direction, new_cost)
+            enqueue_when_cheaper(new_cost, (x, y, new_direction))
 
 
 scenario = load_scenario()
