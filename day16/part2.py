@@ -3,17 +3,14 @@
 import sys
 from heapq import heappush, heappop
 from pathlib import Path
+from collections import defaultdict, deque
 
-DIRECTIONS = [(0, -1), (1, 0), (0, 1), (-1, 0)]
-EAST = 1
 STEP_COST = 1
 ROTATE_COST = 1000
 
 
 def load_scenario():
-    p = Path(__file__).parent / "test2.txt"
-    with p.open() as f:
-        maze = [list(line.strip()) for line in f]
+    maze = [list(line.strip()) for line in sys.stdin]
 
     def find(item):
         return next(
@@ -35,102 +32,96 @@ def find_cheapest_routes(maze, start, end):
     queue = []
 
     # Cost mapping storage, used to keep track of the lowest possible
-    # cost that was found to reach the states in the maze.
-    costs = {}
+    # costs that were found to reach the states in the maze.
+    costs = defaultdict(lambda: float("inf"))
+    cheapest = float("inf")
 
     # Used for backtracking lowest cost routes from end to start.
-    backtrace = {}
-
-    def is_wall(x, y):
-        return maze[y][x] == "#"
-
-    # 0################
-    # 1.#.#.....#█████#
-    # 2.#.#######█#.#.#
-    # 3.#........█#...#
-    # 4.#########█#####  10,5,1 -> 2011
-    # 5.#....████x████#  10,5,0 -> 3011
-    # 6.#####█#######█#  11,5,3 -> 2020
-    # 7███████████████#  10,5,3 -> 2021
-    # #1234567890123456  10,5,0 -> 3021
-
-    def enqueue_move(old_state, new_state, new_cost):
-        (new_x, new_y, new_direction) = new_state
-        new_pos = (new_x, new_y)
-        if new_state not in costs or new_cost < costs[new_pos]:
-            print("QUEUE CHEAPER")
-            costs[new_pos] = new_cost
-            heappush(queue, (new_cost, new_state))
-            if old_state:
-                (old_x, old_y, _) = old_state
-                backtrace.setdefault(new_pos, {})[new_direction] = [(old_x, old_y)]
-
-        elif old_state and (new_state not in costs or new_cost == costs[new_pos]):
-            print("QUEUE EQUAL")
-            (old_x, old_y, _) = old_state
-            backtrace[new_pos][new_direction].append((x, y))
-        else:
-            print("NOQUEUE")
-
+    backtrack = {}
 
     # Initialize state, using start direction = east.
-    enqueue_move(None, (*start, EAST), 0)
+    costs[(0, 0, 1, 0)] = 0
+    heappush(queue, (0, (*start, 1, 0)))
 
     while queue:
         cost, state = heappop(queue)
-        (x, y, direction) = state
+        x, y, dx, dy = state
 
-        # When the end is reached, we are done.
+        # Walking through walls is a bad idea.
+        if maze[y][x] == "#":
+            continue
+
+        # Don't follow a route when it's worse than the cheapest.
+        if cost > cheapest:
+            continue
+
+        # Found the end of the maze. The first time we find this,
+        # we have found the cheapest route. Keep track of the cost
+        # of this cheapest route, so we can reject other routes
+        # coming in that have a worse overall cost.
         if (x, y) == end:
-            return cost, costs, backtrace
+            cheapest = cost
+            continue
 
-        print("POP", state, "COST", cost, "existing cost", costs[state])
+        # Start moving.
+        for new_state, new_cost in (
+            ((x + dx, y + dy, dx, dy), cost + STEP_COST), # forward
+            ((x, y, -dy, dx), cost + ROTATE_COST), # clockwise
+            ((x, y, dy, -dx), cost + ROTATE_COST),# counter-clockwise
+        ):
+            # If we already have a better route to the new state,
+            # then stop following this one.
+            if new_cost > costs[new_state]:
+                continue
 
-        # Try to rotate into the other directions.
-        for rotation in (-1, +1):
-            new_direction = (direction + rotation) % 4
-            new_cost = cost + ROTATE_COST
-            new_state = (x, y, new_direction)
-            print("ENQUEUE rotate", rotation, "=", new_state, new_cost)
-            enqueue_move(state, new_state, new_cost)
+            # If we found a better route to the new state, then reset
+            # the backtrack to ditch existing, more expensive routes,
+            # and enqueue the move to explore the route further.
+            if new_cost < costs[new_state]:
+                backtrack[new_state] = set()
+                heappush(queue, (new_cost, new_state))
 
-        # Try to move one position forward.
-        dx, dy = DIRECTIONS[direction]
-        new_x, new_y = x + dx, y + dy
-        if not is_wall(new_x, new_y):
-            new_cost = cost + STEP_COST
-            new_state = (new_x, new_y, direction)
-            print("ENQUEUE step", state, "->", new_state, new_cost)
-            enqueue_move(state, new_state, new_cost)
+            # Update cost and backtrack information. This will also
+            # add a new backtrack item when we are on a route that
+            # is equally expensive as the currently cheapest route.
+            costs[new_state] = new_cost
+            backtrack[new_state].add(state)
 
-def find_visited_tiles(scenario, routes):
-    maze_, start, end = scenario
-    cost, costs, backtrace = routes
-    tiles = set()
-
-    def trace(position):
-        if position in tiles:
-            return
-        tiles.add(position)
-        for predecessors in backtrace[position].values():
-            for predecessor in predecessors:
-                trace(predecessor)
-
-    trace(end)
-    return tiles
+    return backtrack
 
 
-def visualize(maze, start, end, tiles):
+def find_visited_tiles(end, backtrack):
+    end_tiles = (
+        (x, y, dx, dy)
+        for x, y, dx, dy in backtrack
+        if (x, y) == end
+    )
+    queue = deque(end_tiles)
+
+    seen = set()
+    visited_tiles = set()
+    while queue:
+        state = x, y, _, _ = queue.pop()
+        visited_tiles.add((x, y))
+        if state not in seen:
+            seen.add(state)
+            queue.extend(backtrack[state])
+
+    return visited_tiles
+
+
+def visualize(maze, visited_tiles):
     for y in range(len(maze)):
         for x in range(len(maze[0])):
-            p = "█" if (x, y) in tiles else maze[y][x]
+            p = "█" if (x, y) in visited_tiles else maze[y][x]
             print(p, end="")
         print()
 
 
-scenario = load_scenario()
-routes = find_cheapest_routes(*scenario)
-visited_tiles = find_visited_tiles(scenario, routes)
+maze, start, end = load_scenario()
+backtrack = find_cheapest_routes(maze, start, end)
+visited_tiles = find_visited_tiles(end, backtrack)
+visualize(maze, visited_tiles)
 
-visualize(*scenario, visited_tiles)
 print("Number of visited tiles:", len(visited_tiles))
+
