@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-import sys
 from heapq import heappush as I, heappop as O
 def X(n):
  w,h=[1+max(v[i]for v in M)for i in[0, 1]]
@@ -10,7 +8,7 @@ def X(n):
   for f,g in D:
    j,k=x+f,y+g;d=c+1;s=(j,k)
    if 0<=j<w and 0<=k<h and not(j,k)in M[:n]and(d<C.get(s,w*h)):C[s]=d;I(Q,(d,s))
-M=[tuple(map(int,l.strip().split(",")))for l in sys.stdin];L,U=0,len(M);A=0
+M=[tuple(map(int,l.strip().split(",")))for l in open(0)];L,U=0,len(M);A=0
 while True:
  P=L+(U-L)//2
  if P==A:print(M[U-1]);break

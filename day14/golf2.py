@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import sys,re
 w,h,t,R=101,103,0,[list(map(int,re.findall(r"-?\d+",line)))for line in sys.stdin]
 while 1:

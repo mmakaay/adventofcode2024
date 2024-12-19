@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
-import sys
-P=[list(l.strip())for l in sys.stdin]
+P=[list(l.strip())for l in open(0)]
 w,h,S,T=len(P[0]),len(P),set(),0
 def i(x,y,r):
  S.add((x,y));r[0]+=1

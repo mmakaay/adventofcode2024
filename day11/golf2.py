@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
-import sys
 from collections import Counter as C
-A=C(next(sys.stdin).split())
+A=C(next(open(0)).split())
 for _ in range(75):
  N=C()
  for n,c in A.items():

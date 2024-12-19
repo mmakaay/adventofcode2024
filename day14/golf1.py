@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
-import sys,re
-R,K=[list(map(int,re.findall(r"-?\d+",l)))for l in sys.stdin],100
+import re
+R,K=[list(map(int,re.findall(r"-?\d+",l)))for l in open(0)],100
 w,h=[1+max(r[i]for r in R)for i in[0,1]]
 while K:=K-1:
  M,Q=[],[0]*5

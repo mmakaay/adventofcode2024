@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
-import sys
 n,W,P,R=enumerate,[],"",0
-for y,l in n(sys.stdin):
+for y,l in n(open(0)):
  if l[0]=="#":r=list(l);W+=[r];R=(r.index("@"),y)if"@"in r else R
  else:P+=l.strip()
 for D in P:
