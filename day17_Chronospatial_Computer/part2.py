@@ -22,9 +22,9 @@
 #   JNZ 0   A = A' and loop
 #
 # Simplified into Python code:
-# 
+#
 #   b = 1 ^ (a % 8)
-#   c = a // (2 ** b)       
+#   c = a // (2 ** b)
 #   out = (b ^ 4 ^ c) % 8
 #   a = a // 8
 #
@@ -35,11 +35,12 @@
 #   the number of options we have to check.
 #
 
+
 def forward(a):
     n = []
     while a:
         b = 1 ^ (a % 8)
-        c = a // (2 ** b)
+        c = a // (2**b)
         out = (b ^ 4 ^ c) % 8
         a = a // 8
         n.append(out)
@@ -47,8 +48,8 @@ def forward(a):
 
 
 def reverse(full_program, a=0, size=1):
-    l = len(full_program)
-    end_of_program = full_program[l-size:l]
+    program_length = len(full_program)
+    end_of_program = full_program[program_length - size : program_length]
     for i in range(8):
         a_candidate = a * 8 + i
         generated_program = forward(a_candidate)
@@ -57,7 +58,7 @@ def reverse(full_program, a=0, size=1):
         elif generated_program == end_of_program:
             yield from reverse(full_program, a_candidate, size + 1)
 
-program = [2,4,1,1,7,5,1,4,0,3,4,5,5,5,3,0]
+
+program = [2, 4, 1, 1, 7, 5, 1, 4, 0, 3, 4, 5, 5, 5, 3, 0]
 a_min = min(reverse(program))
 print("Minimal A:", a_min)
-

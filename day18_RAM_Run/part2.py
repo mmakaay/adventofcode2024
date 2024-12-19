@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
 
 import sys
-import sys
 from heapq import heappush, heappop
 
 
 def load_warzone():
-    impacts = [
-        tuple(map(int, line.strip().split(",")))
-        for line in sys.stdin
-    ]
+    impacts = [tuple(map(int, line.strip().split(","))) for line in sys.stdin]
     width = max(x for x, _ in impacts) + 1
     height = max(y for _, y in impacts) + 1
     return width, height, impacts
@@ -40,7 +36,7 @@ def plan_safe_route(warzone, start, end, number_of_impacts):
 
         for dx, dy in directions:
             new_x, new_y = x + dx, y + dy
-            if 0<=new_x<width and 0<=new_y<height:
+            if 0 <= new_x < width and 0 <= new_y < height:
                 if not is_impact_zone(new_x, new_y, number_of_impacts):
                     enqueue(cost + 1, (new_x, new_y))
     return None
@@ -56,11 +52,10 @@ last_attempt = None
 while True:
     attempt = lower + (upper - lower) // 2
     if attempt == last_attempt:
-        print("First blocking impact:", impacts[upper-1])
+        print("First blocking impact:", impacts[upper - 1])
         break
     last_attempt = attempt
     if plan_safe_route(warzone, start, end, attempt):
         lower = attempt
     else:
         upper = attempt
-

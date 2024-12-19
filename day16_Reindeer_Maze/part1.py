@@ -2,8 +2,7 @@
 
 import sys
 from heapq import heappush, heappop
-from pathlib import Path
-from collections import defaultdict, deque
+from collections import defaultdict
 
 STEP_COST = 1
 ROTATE_COST = 1000
@@ -56,9 +55,9 @@ def find_lowest_cost(maze, start, end):
 
         # Start moving.
         for new_state, new_cost in (
-            ((x + dx, y + dy, dx, dy), cost + STEP_COST), # forward
-            ((x, y, -dy, dx), cost + ROTATE_COST), # clockwise
-            ((x, y, dy, -dx), cost + ROTATE_COST),# counter-clockwise
+            ((x + dx, y + dy, dx, dy), cost + STEP_COST),  # forward
+            ((x, y, -dy, dx), cost + ROTATE_COST),  # clockwise
+            ((x, y, dy, -dx), cost + ROTATE_COST),  # counter-clockwise
         ):
             # If we already have a better route to the new state,
             # then stop following this one.
@@ -76,4 +75,3 @@ maze, start, end = load_scenario()
 lowest_cost = find_lowest_cost(maze, start, end)
 
 print(lowest_cost == 78428)
-

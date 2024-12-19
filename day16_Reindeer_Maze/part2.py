@@ -2,7 +2,6 @@
 
 import sys
 from heapq import heappush, heappop
-from pathlib import Path
 from collections import defaultdict, deque
 
 STEP_COST = 1
@@ -65,9 +64,9 @@ def find_cheapest_routes(maze, start, end):
 
         # Start moving.
         for new_state, new_cost in (
-            ((x + dx, y + dy, dx, dy), cost + STEP_COST), # forward
-            ((x, y, -dy, dx), cost + ROTATE_COST), # clockwise
-            ((x, y, dy, -dx), cost + ROTATE_COST),# counter-clockwise
+            ((x + dx, y + dy, dx, dy), cost + STEP_COST),  # forward
+            ((x, y, -dy, dx), cost + ROTATE_COST),  # clockwise
+            ((x, y, dy, -dx), cost + ROTATE_COST),  # counter-clockwise
         ):
             # If we already have a better route to the new state,
             # then stop following this one.
@@ -91,11 +90,7 @@ def find_cheapest_routes(maze, start, end):
 
 
 def find_visited_tiles(end, backtrack):
-    end_tiles = (
-        (x, y, dx, dy)
-        for x, y, dx, dy in backtrack
-        if (x, y) == end
-    )
+    end_tiles = ((x, y, dx, dy) for x, y, dx, dy in backtrack if (x, y) == end)
     queue = deque(end_tiles)
 
     seen = set()
@@ -124,4 +119,3 @@ visited_tiles = find_visited_tiles(end, backtrack)
 visualize(maze, visited_tiles)
 
 print("Number of visited tiles:", len(visited_tiles))
-

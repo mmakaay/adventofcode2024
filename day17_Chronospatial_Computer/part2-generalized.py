@@ -8,8 +8,8 @@ def forward(a, program):
 
 
 def reverse(full_program, a=0, size=1):
-    l = len(full_program)
-    end_of_program = full_program[l-size:l]
+    program_length = len(full_program)
+    end_of_program = full_program[program_length - size : program_length]
     for i in range(8):
         a_candidate = a * 8 + i
         generated_program = forward(a_candidate, full_program)
@@ -22,4 +22,3 @@ def reverse(full_program, a=0, size=1):
 _, program = load_input()
 a_min = min(reverse(program))
 print("Minimal A:", a_min)
-

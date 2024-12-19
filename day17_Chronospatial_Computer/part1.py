@@ -7,6 +7,7 @@ A = 0
 B = 1
 C = 2
 
+
 def load_input():
     reg = []
     for line in sys.stdin:
@@ -22,15 +23,24 @@ def execute(reg, program):
     while ptr < len(program):
         opcode = program[ptr]
         match opcode:
-            case 0: state = adv(state)
-            case 1: state = bxl(state)
-            case 2: state = bst(state)
-            case 3: state = jnz(state)
-            case 4: state = bxc(state)
-            case 5: state = yield from out(state)
-            case 6: state = bdv(state)
-            case 7: state = cdv(state)
-            case _: raise NotImplementedError
+            case 0:
+                state = adv(state)
+            case 1:
+                state = bxl(state)
+            case 2:
+                state = bst(state)
+            case 3:
+                state = jnz(state)
+            case 4:
+                state = bxc(state)
+            case 5:
+                state = yield from out(state)
+            case 6:
+                state = bdv(state)
+            case 7:
+                state = cdv(state)
+            case _:
+                raise NotImplementedError
         reg, program, ptr = state
 
 
@@ -38,7 +48,7 @@ def div(state, to_register):
     reg, program, ptr = state
     numerator = reg[A]
     operand = get_combo_operand(state)
-    denominator = 2 ** operand 
+    denominator = 2**operand
     result = numerator // denominator
     r = list(reg)
     r[to_register] = result
@@ -87,7 +97,7 @@ def out(state):
     result = get_combo_operand(state) % 8
     yield result
     return reg, program, ptr + 2
-    
+
 
 def get_literal_operand(state):
     reg, program, ptr = state
@@ -96,19 +106,13 @@ def get_literal_operand(state):
 
 def get_combo_operand(state):
     reg, program, ptr = state
-    match program[ptr + 1]:
-        case 0: return 0
-        case 1: return 1
-        case 2: return 2
-        case 3: return 3
-        case 4: return reg[A]
-        case 5: return reg[B]
-        case 6: return reg[C]
-        case _: NotImplementedError
+    value = program[ptr + 1]
+    if value <= 3:
+        return value
+    return reg[value - 4]
 
 
 if __name__ == "__main__":
     reg, program = load_input()
     results = execute(reg, program)
     print(",".join(map(str, results)))
-
