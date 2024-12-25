@@ -67,7 +67,7 @@ def find_path(p, key_start, key_finish ):
         if x_finish > x and p[y][ x + 1 ] != ' ':
             yield from build_paths(x + 1, y, new_code + '>')
 
-    all_paths = build_paths(x_start, y_start, "")
+    all_paths = list(build_paths(x_start, y_start, ""))
 
     # Paths that use repeated characters are better than paths that don't.
     # Reason for this is that for example:
@@ -78,8 +78,10 @@ def find_path(p, key_start, key_finish ):
     def score_path(path):
         return sum(a == b for (a, b) in zip(path, path[1:]))
 
-    return max(all_paths, key=score_path)
+    best = max(all_paths, key=score_path)
+    print(best)
     #lambda p: sum(a != b for a, b in zip(p, p[1 :])))
+    return best
 
 @cache
 def find_code_length(code: str, intermediate_robots: int = 0, is_numpad=True) -> int:

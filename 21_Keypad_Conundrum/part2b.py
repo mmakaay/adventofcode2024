@@ -2,6 +2,7 @@
 
 import re
 import sys
+from collections import defaultdict
 from itertools import product
 from heapq import heappush, heappop
 from functools import cache
@@ -37,7 +38,8 @@ def instantiate_keypads():
     }
 
 
-def find_sequence(keypad_type, key_start, key_finish):
+@cache
+def find_sequences_for_key_transition(keypad_type, key_a, key_b):
     p = keypads[keypad_type]
     w = len(p[0])
     h = len(p)
@@ -50,76 +52,89 @@ def find_sequence(keypad_type, key_start, key_finish):
             if p[y][x] == search_key
         )
 
-    x_start, y_start = find_pos_of(key_start)
-    x_finish, y_finish = find_pos_of(key_finish)
+    x_start, y_start = find_pos_of(key_a)
+    x_finish, y_finish = find_pos_of(key_b)
 
     dirkeys = {(0, -1): "^", (1, 0): ">", (0, 1): "v", (-1, 0): "<"}
-    shortest_sequences = []
+
     queue = []
+    sequences = []
+    costs = defaultdict(lambda: defaultdict(lambda: float("inf")))
     heappush(queue, (0, x_start, y_start, ""))
-    minimal_length = float("inf")
+
     while queue:
-        length, x, y, route = heappop(queue)
-        if length > minimal_length:
+        cost, x, y, route = heappop(queue)
+        if cost > costs[y][x]:
             continue
+        costs[y][x] = cost
         if (x, y) == (x_finish, y_finish):
-            minimal_length = len(route)
-            shortest_sequences.append(route + "A")
+            sequences.append(route)
             continue
-        length += 1
         for dx, dy in ((-1, 0), (0, 1), (0, -1), (1, 0)):
             x2, y2 = x + dx, y + dy
             if 0<=x2<w and 0<=y2<h and p[y2][x2] != " ":
                 dirkey = dirkeys[(dx, dy)]
-                heappush(queue, (length, x2, y2, route + dirkey))
+                heappush(queue, (cost + 1, x2, y2, route + dirkey))
 
-    # See README.md why this scoring function was implemented to find
-    # the best sequence amongs a number of sequences.
-    def get_sequence_quality(sequence):
-        # TODO ^> is actually > at start of string, not what I expected.
-        score = -1 * len(re.findall(r"(>v|^>|v<)", sequence))
-        score += 2 * sum((a == b) for (a, b) in zip(sequence, sequence[1:]))
-        return score
-
-    best = max(shortest_sequences, key=get_sequence_quality)
-    return best
+    return sequences
 
 
 @cache
-def find_best_controlling_sequence_length(
-    sequence: str, intermediate_robots: int = 0, keypad_type="numeric"
+def find_controls_for_sequence(keypad_type, sequence):
+    key_transition_sequences = []
+    for i, (key_a, key_b) in enumerate(zip("A" + sequence, sequence)):
+        s = find_sequences_for_key_transition(keypad_type, key_a, key_b)
+        key_transition_sequences.append(s)
+        key_transition_sequences.append(["A"])
+    return ["".join(s) for s in product(*key_transition_sequences)]
+
+
+@cache
+def find_best_controls_for_sequence(keypad_type, sequence):
+    best = None
+    min_len = float("inf")
+    for c1 in find_controls_for_sequence(keypad_type, sequence):
+        for c2 in find_controls_for_sequence("directional", c1):
+            #for c3 in find_controls_for_sequence("directional", c2):
+            m = min(len(x) for x in c2)
+            if m < min_len:
+                min_len = m
+                best = c1
+    return best
+
+
+def find_best_multi_level_control_length_for_sequence(
+    sequence, intermediate_robots=0, keypad_type="numeric"
 ):
     # < 0, because we start out with the numpad,
     # which is not controlling an intermediate robot.
     if intermediate_robots < 0:
         return len(sequence)
 
-    keypad = keypads[keypad_type]
-    parts = [
-        find_best_controlling_sequence_length(
-            find_sequence(
-                keypad_type, key_start, key_finish
-            ),
-            intermediate_robots - 1,
-            "directional",
-        )
-        for key_start, key_finish in zip('A' + sequence, sequence)
-    ]
-    return sum(parts)
+    controls = find_best_controls_for_sequence(keypad_type, sequence)
+    print(sequence,"->",controls)
+    return find_best_multi_level_control_length_for_sequence(
+        controls,
+        intermediate_robots - 1,
+        "directional",
+    )
 
 
 def load_codes():
     return sys.stdin.read().splitlines()
 
 
-total = 0
 keypads = instantiate_keypads()
-for sequence in load_codes():
-    sequence_length = find_best_controlling_sequence_length(
-        sequence,
-        intermediate_robots=25
-    )
-    score = int(sequence[:-1]) * sequence_length
-    total += score
 
-print("Total:", total)
+print(find_best_multi_level_control_length_for_sequence("01", 25, "numeric"))
+
+#total = 0
+#for sequence in load_codes():
+#    sequence_length = find_best_controlling_sequence_length(
+#        sequence,
+#        intermediate_robots=25
+#    )
+#    score = int(sequence[:-1]) * sequence_length
+#    total += score
+
+##print("Total:", total)
